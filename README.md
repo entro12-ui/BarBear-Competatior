@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Barbear — Hair Style Competition Voting System
 
-## Getting Started
+Next.js app for barber / hair-style competitions with public voting and an admin dashboard.
 
-First, run the development server:
+## Stack
+
+- Next.js (App Router) + TypeScript
+- Tailwind CSS + shadcn/ui
+- **Local PostgreSQL** (`pg`)
+- Cookie-based admin auth (`jose` + `bcryptjs`)
+- Local image uploads (`public/uploads`)
+- React Hook Form + Zod
+- Recharts (admin results)
+
+## Quick start (local Postgres)
+
+### 1. Start PostgreSQL (Docker)
+
+```bash
+docker start barbear-postgres 2>/dev/null || \
+docker run -d --name barbear-postgres \
+  -e POSTGRES_USER=barbear \
+  -e POSTGRES_PASSWORD=barbear \
+  -e POSTGRES_DB=barbear \
+  -p 55432:5432 \
+  postgres:16-alpine
+```
+
+### 2. Configure env
+
+```bash
+cp .env.example .env.local
+npm install
+```
+
+### 3. Create tables + admin user
+
+```bash
+npm run db:setup
+```
+
+Default admin:
+
+- **Email:** `admin@barbear.com`
+- **Password:** `admin123`
+
+### 4. Run the app
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Public site: http://localhost:3000
+- Admin: http://localhost:3000/admin/login
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Admin workflow
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Sign in at `/admin/login`
+2. Create/edit competition
+3. Add competitors and upload Front / Back / Left / Right images
+4. Publish competitors, set competition status to `active`
+5. Monitor votes and results
 
-## Learn More
+## Voting integrity
 
-To learn more about Next.js, take a look at the following resources:
+- Email is trimmed + lowercased
+- OTP verification before vote is saved
+- Database unique constraint: `(competition_id, voter_email)`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run dev
+npm run build
+npm run db:setup
+npm run lint
+```
+# BarBear-Competatior
