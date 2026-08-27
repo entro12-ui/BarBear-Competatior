@@ -2,12 +2,39 @@ export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
-/** Keep digits and a leading +, strip spaces/dashes for unique vote checks. */
+/**
+ * Normalize Ethiopian mobile numbers to +2519XXXXXXXX / +2517XXXXXXXX.
+ * Accepts: +251918042280, 251918042280, 0918042280, 918042280
+ */
+export function normalizeEthiopianPhone(phone: string): string | null {
+  const digits = phone.trim().replace(/\D/g, "");
+  let national: string | null = null;
+
+  if (digits.startsWith("251") && digits.length === 12) {
+    national = digits.slice(3);
+  } else if (digits.startsWith("0") && digits.length === 10) {
+    national = digits.slice(1);
+  } else if (digits.length === 9) {
+    national = digits;
+  } else {
+    return null;
+  }
+
+  // Ethio Telecom / Safaricom-style mobiles: 9xxxxxxxx or 7xxxxxxxx
+  if (!/^[97]\d{8}$/.test(national)) {
+    return null;
+  }
+
+  return `+251${national}`;
+}
+
+export function isValidEthiopianPhone(phone: string): boolean {
+  return normalizeEthiopianPhone(phone) !== null;
+}
+
+/** Canonical phone for vote uniqueness (Ethiopian → +251…). */
 export function normalizePhone(phone: string): string {
-  const trimmed = phone.trim();
-  const hasPlus = trimmed.startsWith("+");
-  const digits = trimmed.replace(/\D/g, "");
-  return hasPlus ? `+${digits}` : digits;
+  return normalizeEthiopianPhone(phone) ?? phone.trim().replace(/\D/g, "");
 }
 
 export function formatCompetitionNumber(num: string | number | null | undefined): string {
