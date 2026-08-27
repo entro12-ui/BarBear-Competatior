@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isValidEthiopianPhone } from "@/lib/utils/format";
+import { isValidPhone } from "@/lib/utils/format";
 
 export const competitionStatusSchema = z.enum([
   "draft",
@@ -77,11 +77,11 @@ export const voteRequestSchema = z.object({
   voter_phone: z
     .string()
     .trim()
-    .min(9, "Please enter your Ethiopian phone number")
+    .min(8, "Please enter your phone number")
     .max(20, "Phone number is too long")
     .refine(
-      (value) => isValidEthiopianPhone(value),
-      "Use an Ethiopian number like +251918042280 or 0918042280"
+      (value) => isValidPhone(value),
+      "Enter a valid phone, e.g. 0918…, 0718…, +2519…, +2517…, or +1…"
     ),
 });
 

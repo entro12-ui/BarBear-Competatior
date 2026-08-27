@@ -8,7 +8,7 @@ import {
   verifyPassword,
 } from "@/lib/auth";
 import { isDatabaseConfigured, queryOne } from "@/lib/db";
-import { isVotingOpen, normalizeEthiopianPhone } from "@/lib/utils/format";
+import { isVotingOpen, normalizePhone } from "@/lib/utils/format";
 import { voteRequestSchema } from "@/lib/validations";
 import type { ActionResult } from "@/lib/actions/queries";
 import { checkPhoneVoteStatus } from "@/lib/actions/queries";
@@ -31,12 +31,13 @@ export async function submitVote(
 
   const { competition_id, competitor_id, voter_name, voter_phone } =
     parsed.data;
-  const phone = normalizeEthiopianPhone(voter_phone);
+  const phone = normalizePhone(voter_phone);
 
   if (!phone) {
     return {
       success: false,
-      error: "Use an Ethiopian number like +251918042280 or 0918042280",
+      error:
+        "Enter a valid phone number, e.g. 0918042280, 0718042280, +2519…, +2517…, or another country code.",
     };
   }
 

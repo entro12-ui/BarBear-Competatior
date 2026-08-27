@@ -106,14 +106,14 @@ export function VoteForm({
 
         <div className="space-y-2">
           <Label htmlFor="voter_phone" className="text-white/80">
-            Ethiopian Phone Number
+            Phone Number
           </Label>
           <Input
             id="voter_phone"
             type="tel"
             inputMode="tel"
             className="border-white/15 bg-black/40 text-white"
-            placeholder="+251918042280 or 0918042280"
+            placeholder="0918…, 0718…, +251…, or +1…"
             {...form.register("voter_phone")}
           />
           {form.formState.errors.voter_phone && (
@@ -122,7 +122,8 @@ export function VoteForm({
             </p>
           )}
           <p className="text-xs text-white/45">
-            Accepts +251… or 09…. One vote per phone number.
+            Accepts 09…, 07…, +251…, and international numbers. One vote per
+            phone.
           </p>
         </div>
 

@@ -4,7 +4,10 @@ export function normalizeEmail(email: string): string {
 
 /**
  * Normalize Ethiopian mobile numbers to +2519XXXXXXXX / +2517XXXXXXXX.
- * Accepts: +251918042280, 251918042280, 0918042280, 918042280
+ * Accepts:
+ * - 0918042280 / 0718042280
+ * - +251918042280 / +251718042280
+ * - 251918042280 / 918042280 / 718042280
  */
 export function normalizeEthiopianPhone(phone: string): string | null {
   const digits = phone.trim().replace(/\D/g, "");
@@ -12,15 +15,21 @@ export function normalizeEthiopianPhone(phone: string): string | null {
 
   if (digits.startsWith("251") && digits.length === 12) {
     national = digits.slice(3);
-  } else if (digits.startsWith("0") && digits.length === 10) {
+  } else if (
+    (digits.startsWith("09") || digits.startsWith("07")) &&
+    digits.length === 10
+  ) {
     national = digits.slice(1);
-  } else if (digits.length === 9) {
+  } else if (digits.startsWith("0") && digits.length === 10) {
+    // Other local 0XXXXXXXXX forms
+    national = digits.slice(1);
+  } else if (digits.length === 9 && /^[97]/.test(digits)) {
     national = digits;
   } else {
     return null;
   }
 
-  // Ethio Telecom / Safaricom-style mobiles: 9xxxxxxxx or 7xxxxxxxx
+  // Ethio Telecom (09…) and Safaricom ET (07…)
   if (!/^[97]\d{8}$/.test(national)) {
     return null;
   }
@@ -28,13 +37,52 @@ export function normalizeEthiopianPhone(phone: string): string | null {
   return `+251${national}`;
 }
 
-export function isValidEthiopianPhone(phone: string): boolean {
-  return normalizeEthiopianPhone(phone) !== null;
+/**
+ * Normalize any phone to E.164-style (+country...).
+ * Ethiopian local 09… / +251… map to the same value.
+ * Other countries: +1…, +44…, 00… international prefix, etc.
+ */
+export function normalizePhone(phone: string): string | null {
+  const trimmed = phone.trim();
+  if (!trimmed) return null;
+
+  // Ethiopian first so 0918… and +251918… match as one voter
+  const eth = normalizeEthiopianPhone(trimmed);
+  if (eth) return eth;
+
+  let digits = trimmed.replace(/\D/g, "");
+  if (!digits) return null;
+
+  // 00 international prefix → drop 00
+  if (digits.startsWith("00")) {
+    digits = digits.slice(2);
+  }
+
+  // E.164 allows max 15 digits; require at least 8
+  if (digits.length < 8 || digits.length > 15) {
+    return null;
+  }
+
+  // Must be international-style (not a bare local 0… from an unknown country)
+  const looksInternational =
+    trimmed.startsWith("+") ||
+    trimmed.startsWith("00") ||
+    /^[1-9]\d{7,14}$/.test(digits);
+
+  if (!looksInternational) {
+    return null;
+  }
+
+  return `+${digits}`;
 }
 
-/** Canonical phone for vote uniqueness (Ethiopian → +251…). */
-export function normalizePhone(phone: string): string {
-  return normalizeEthiopianPhone(phone) ?? phone.trim().replace(/\D/g, "");
+export function isValidPhone(phone: string): boolean {
+  return normalizePhone(phone) !== null;
+}
+
+/** @deprecated Use isValidPhone — kept for older imports */
+export function isValidEthiopianPhone(phone: string): boolean {
+  return isValidPhone(phone);
 }
 
 export function formatCompetitionNumber(num: string | number | null | undefined): string {
