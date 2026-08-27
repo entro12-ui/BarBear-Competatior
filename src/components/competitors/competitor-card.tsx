@@ -57,9 +57,9 @@ export function CompetitorCard({
             <h3 className="mt-1 text-base font-medium leading-snug text-white/90 sm:text-lg">
               {competitor.full_name}
             </h3>
-            <p className="mt-3 text-lg font-semibold tabular-nums text-white">
+            <p className="mt-3 text-xl font-bold tabular-nums text-[#e8c878]">
               {voteCount.toLocaleString()}
-              <span className="ml-1 text-xs font-normal text-white/45">
+              <span className="ml-1.5 text-xs font-normal uppercase tracking-wide text-white/55">
                 votes
               </span>
             </p>

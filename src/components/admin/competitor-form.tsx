@@ -1,30 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
-import {
-  createCompetitor,
-  updateCompetitor,
-  uploadCompetitorImage,
-} from "@/lib/actions/admin";
-import {
-  competitorFormSchema,
-  type CompetitorFormValues,
-} from "@/lib/validations";
+import { useActionState, useState } from "react";
+import { useFormStatus } from "react-dom";
+import { createCompetitor, updateCompetitor } from "@/lib/actions/admin";
+import type { ActionResult } from "@/lib/actions/queries";
 import type { Competition, CompetitorWithImages } from "@/types/database";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
 type Props = {
@@ -32,124 +15,56 @@ type Props = {
   competitor?: CompetitorWithImages;
 };
 
+function SubmitButton({ isEdit }: { isEdit: boolean }) {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" disabled={pending} className="bg-ink text-stone">
+      {pending
+        ? "Saving..."
+        : isEdit
+          ? "Update competitor"
+          : "Create competitor"}
+    </Button>
+  );
+}
+
 export function CompetitorForm({ competitions, competitor }: Props) {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
-  const [uploading, setUploading] = useState(false);
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [profilePreview, setProfilePreview] = useState<string | null>(
+  const isEdit = Boolean(competitor);
+  const [preview, setPreview] = useState<string | null>(
     competitor?.profile_photo_url ?? null
   );
 
-  const form = useForm<CompetitorFormValues>({
-    resolver: zodResolver(competitorFormSchema),
-    defaultValues: {
-      competition_id:
-        competitor?.competition_id ?? competitions[0]?.id ?? "",
-      full_name: competitor?.full_name ?? "",
-      barber_name: competitor?.barber_name ?? "",
-      competition_number: competitor?.competition_number ?? 1,
-      short_bio: competitor?.short_bio ?? "",
-      description: competitor?.description ?? "",
-      phone: competitor?.phone ?? "",
-      status: competitor?.status ?? "published",
-      instagram_url: competitor?.instagram_url ?? "",
-      tiktok_url: competitor?.tiktok_url ?? "",
-      facebook_url: competitor?.facebook_url ?? "",
-      youtube_url: competitor?.youtube_url ?? "",
-      telegram_url: competitor?.telegram_url ?? "",
-      website_url: competitor?.website_url ?? "",
-    },
-  });
-
-  const currentStatus = form.watch("status");
-  const previewNote = useMemo(
-    () =>
-      currentStatus !== "published"
-        ? "Status is not Published — this competitor will stay hidden on the public site."
-        : "Published competitors appear on the public gallery and detail pages.",
-    [currentStatus]
+  const boundUpdate = updateCompetitor.bind(null, competitor?.id ?? "");
+  const [state, formAction] = useActionState(
+    isEdit ? boundUpdate : createCompetitor,
+    null as ActionResult | null
   );
 
-  function onPhotoChange(file: File | null) {
-    setPhotoFile(file);
-    if (file) {
-      setProfilePreview(URL.createObjectURL(file));
-    } else if (competitor?.profile_photo_url) {
-      setProfilePreview(competitor.profile_photo_url);
-    } else {
-      setProfilePreview(null);
-    }
-  }
-
-  function onSubmit(values: CompetitorFormValues) {
-    startTransition(async () => {
-      if (competitor) {
-        const result = await updateCompetitor(competitor.id, values);
-        if (!result.success) {
-          toast.error(result.error);
-          return;
-        }
-
-        if (photoFile) {
-          setUploading(true);
-          const formData = new FormData();
-          formData.append("file", photoFile);
-          const upload = await uploadCompetitorImage({
-            competitorId: competitor.id,
-            imageType: "profile",
-            formData,
-          });
-          setUploading(false);
-          if (!upload.success) {
-            toast.error(upload.error);
-            return;
-          }
-          setProfilePreview(upload.data.url);
-          setPhotoFile(null);
-        }
-
-        toast.success("Competitor updated");
-        router.push("/admin/competitors");
-      } else {
-        if (!photoFile) {
-          toast.error("Please upload a photo for this competitor.");
-          return;
-        }
-
-        const formData = new FormData();
-        formData.append("file", photoFile);
-        const result = await createCompetitor(values, formData);
-        if (!result.success) {
-          toast.error(result.error);
-          return;
-        }
-        toast.success("Competitor created");
-        router.push("/admin/competitors");
-      }
-      router.refresh();
-    });
-  }
+  const error = state && !state.success ? state.error : null;
 
   return (
-    <form className="mx-auto max-w-2xl space-y-5" onSubmit={form.handleSubmit(onSubmit)}>
+    <form action={formAction} className="mx-auto max-w-2xl space-y-5">
       <div className="space-y-2 rounded-lg border border-border bg-card/80 p-5">
         <Label htmlFor="photo">Photo</Label>
         <Input
           id="photo"
+          name="photo"
           type="file"
           accept="image/jpeg,image/png,image/webp"
-          disabled={uploading || pending}
-          onChange={(e) => onPhotoChange(e.target.files?.[0] ?? null)}
+          required={!isEdit}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            setPreview(file ? URL.createObjectURL(file) : competitor?.profile_photo_url ?? null);
+          }}
         />
         <p className="text-xs text-muted-foreground">
-          One photo shown to voters on the list and profile. JPG, PNG, or WEBP — max 5MB.
-          {!competitor ? " Required when creating." : ""}
+          One photo shown to voters. JPG, PNG, or WEBP — max 5MB.
+          {!isEdit ? " Required." : " Leave empty to keep the current photo."}
         </p>
-        {profilePreview && (
+        {preview && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={profilePreview}
+            src={preview}
             alt="Competitor photo"
             className="mt-3 h-40 w-40 rounded-lg object-cover"
           />
@@ -157,122 +72,125 @@ export function CompetitorForm({ competitions, competitor }: Props) {
       </div>
 
       <div className="space-y-2">
-        <Label>Competition</Label>
-        <Select
-          value={form.watch("competition_id")}
-          onValueChange={(value) => {
-            if (value) form.setValue("competition_id", value);
-          }}
+        <Label htmlFor="competition_id">Competition</Label>
+        <select
+          id="competition_id"
+          name="competition_id"
+          required
+          defaultValue={competitor?.competition_id ?? competitions[0]?.id ?? ""}
+          className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
         >
-          <SelectTrigger>
-            <SelectValue placeholder="Select competition" />
-          </SelectTrigger>
-          <SelectContent>
-            {competitions.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          {competitions.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
       </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="full_name">Full Name</Label>
-          <Input id="full_name" {...form.register("full_name")} />
+          <Input
+            id="full_name"
+            name="full_name"
+            required
+            defaultValue={competitor?.full_name ?? ""}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="barber_name">Barber Name</Label>
-          <Input id="barber_name" {...form.register("barber_name")} />
+          <Input
+            id="barber_name"
+            name="barber_name"
+            required
+            defaultValue={competitor?.barber_name ?? ""}
+          />
         </div>
       </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="competition_number">Competition Number</Label>
           <Input
             id="competition_number"
+            name="competition_number"
             type="number"
-            {...form.register("competition_number", { valueAsNumber: true })}
+            min={1}
+            required
+            defaultValue={competitor?.competition_number ?? 1}
           />
         </div>
         <div className="space-y-2">
-          <Label>Status</Label>
-          <Select
-            value={form.watch("status")}
-            onValueChange={(value) => {
-              if (value) {
-                form.setValue(
-                  "status",
-                  value as CompetitorFormValues["status"]
-                );
-              }
-            }}
+          <Label htmlFor="status">Status</Label>
+          <select
+            id="status"
+            name="status"
+            defaultValue={competitor?.status ?? "published"}
+            className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
           >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {["draft", "published", "hidden"].map((status) => (
-                <SelectItem key={status} value={status}>
-                  {status}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <option value="published">published</option>
+            <option value="draft">draft</option>
+            <option value="hidden">hidden</option>
+          </select>
         </div>
       </div>
-      <p className="text-sm text-muted-foreground">{previewNote}</p>
+
       <div className="space-y-2">
         <Label htmlFor="short_bio">Short Bio</Label>
-        <Input id="short_bio" {...form.register("short_bio")} />
+        <Input
+          id="short_bio"
+          name="short_bio"
+          defaultValue={competitor?.short_bio ?? ""}
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="description">Detailed Description</Label>
-        <Textarea id="description" rows={5} {...form.register("description")} />
+        <Textarea
+          id="description"
+          name="description"
+          rows={5}
+          defaultValue={competitor?.description ?? ""}
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="phone">Phone (admin only)</Label>
-        <Input id="phone" {...form.register("phone")} />
+        <Input
+          id="phone"
+          name="phone"
+          defaultValue={competitor?.phone ?? ""}
+        />
       </div>
 
       <div className="space-y-3 border-t border-border pt-5">
         <h3 className="font-display text-xl">Social media links</h3>
         <p className="text-xs text-muted-foreground">
-          Optional. Shown on the public competitor profile.
+          Optional. Use full links starting with https://
         </p>
         {(
           [
-            ["instagram_url", "Instagram URL"],
-            ["tiktok_url", "TikTok URL"],
-            ["facebook_url", "Facebook URL"],
-            ["youtube_url", "YouTube URL"],
-            ["telegram_url", "Telegram URL"],
-            ["website_url", "Website URL"],
+            ["instagram_url", "Instagram URL", competitor?.instagram_url],
+            ["tiktok_url", "TikTok URL", competitor?.tiktok_url],
+            ["facebook_url", "Facebook URL", competitor?.facebook_url],
+            ["youtube_url", "YouTube URL", competitor?.youtube_url],
+            ["telegram_url", "Telegram URL", competitor?.telegram_url],
+            ["website_url", "Website URL", competitor?.website_url],
           ] as const
-        ).map(([name, label]) => (
+        ).map(([name, label, value]) => (
           <div key={name} className="space-y-2">
             <Label htmlFor={name}>{label}</Label>
             <Input
               id={name}
+              name={name}
               placeholder="https://"
-              {...form.register(name)}
+              defaultValue={value ?? ""}
             />
-            {form.formState.errors[name] && (
-              <p className="text-sm text-destructive">
-                {form.formState.errors[name]?.message}
-              </p>
-            )}
           </div>
         ))}
       </div>
 
-      <Button type="submit" disabled={pending || uploading} className="bg-ink text-stone">
-        {pending || uploading
-          ? "Saving..."
-          : competitor
-            ? "Update competitor"
-            : "Create competitor"}
-      </Button>
+      {error && <p className="text-sm text-destructive">{error}</p>}
+      <SubmitButton isEdit={isEdit} />
     </form>
   );
 }

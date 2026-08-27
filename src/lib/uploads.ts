@@ -11,6 +11,27 @@ const ALLOWED_MIME = new Set([
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
+/** Absolute directory where uploaded files are stored. */
+export function getUploadRoot(): string {
+  if (process.env.UPLOAD_DIR) {
+    return path.resolve(process.env.UPLOAD_DIR);
+  }
+  return path.join(process.cwd(), "public", "uploads");
+}
+
+/**
+ * Public URL path for a stored file.
+ * Custom UPLOAD_DIR is served via /api/uploads (Render disk).
+ * Local default still uses /uploads from public/.
+ */
+export function getPublicUploadPath(folder: string, filename: string): string {
+  const relative = `${folder}/${filename}`.replace(/\\/g, "/");
+  if (process.env.UPLOAD_DIR) {
+    return `/api/uploads/${relative}`;
+  }
+  return `/uploads/${relative}`;
+}
+
 export async function saveUploadedImage(
   file: File,
   folder: string
@@ -24,13 +45,15 @@ export async function saveUploadedImage(
 
   const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
   const filename = `${randomUUID()}.${extension}`;
-  const relativeDir = path.join("uploads", folder);
-  const absoluteDir = path.join(process.cwd(), "public", relativeDir);
+  const absoluteDir = path.join(/*turbopackIgnore: true*/ getUploadRoot(), folder);
 
   await mkdir(absoluteDir, { recursive: true });
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(path.join(absoluteDir, filename), buffer);
+  await writeFile(
+    path.join(/*turbopackIgnore: true*/ absoluteDir, filename),
+    buffer
+  );
 
-  return { url: `/${relativeDir}/${filename}`.replace(/\\/g, "/") };
+  return { url: getPublicUploadPath(folder, filename) };
 }

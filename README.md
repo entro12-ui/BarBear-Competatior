@@ -6,73 +6,93 @@ Next.js app for barber / hair-style competitions with public voting and an admin
 
 - Next.js (App Router) + TypeScript
 - Tailwind CSS + shadcn/ui
-- **Local PostgreSQL** (`pg`)
+- PostgreSQL (`pg`) — local Docker or Render
 - Cookie-based admin auth (`jose` + `bcryptjs`)
-- Local image uploads (`public/uploads`)
+- Image uploads (local `public/uploads` or Render disk)
 - React Hook Form + Zod
 - Recharts (admin results)
 
-## Quick start (local Postgres)
-
-### 1. Start PostgreSQL (Docker)
+## Quick start (local)
 
 ```bash
-docker start barbear-postgres 2>/dev/null || \
-docker run -d --name barbear-postgres \
-  -e POSTGRES_USER=barbear \
-  -e POSTGRES_PASSWORD=barbear \
-  -e POSTGRES_DB=barbear \
-  -p 55432:5432 \
-  postgres:16-alpine
-```
-
-### 2. Configure env
-
-```bash
+npm run db:start
 cp .env.example .env.local
 npm install
-```
-
-### 3. Create tables + admin user
-
-```bash
 npm run db:setup
-```
-
-Default admin:
-
-- **Email:** `admin@barbear.com`
-- **Password:** `admin123`
-
-### 4. Run the app
-
-```bash
 npm run dev
 ```
 
-- Public site: http://localhost:3000
-- Admin: http://localhost:3000/admin/login
+- Public: http://localhost:3000
+- Admin: http://localhost:3000/admin/login (`admin@barbear.com` / `admin123`)
 
-## Admin workflow
+## Deploy on Render
 
-1. Sign in at `/admin/login`
-2. Create/edit competition
-3. Add competitors and upload Front / Back / Left / Right images
-4. Publish competitors, set competition status to `active`
-5. Monitor votes and results
+### 1. Push this repo to GitHub
 
-## Voting integrity
+Make sure `main` includes the latest code.
 
-- Email is trimmed + lowercased
-- OTP verification before vote is saved
-- Database unique constraint: `(competition_id, voter_email)`
+### 2. Create a Web Service
+
+In [Render Dashboard](https://dashboard.render.com):
+
+1. **New → Web Service** → connect `BarBear-Competatior` (or this repo)
+2. Settings:
+   - **Runtime:** Node
+   - **Build command:** `npm ci && npm run build`
+   - **Start command:** `npm run start`
+   - **Instance:** Starter (needed for the upload disk)
+3. Or use Blueprint: **New → Blueprint** → select this repo (`render.yaml`)
+
+### 3. Environment variables
+
+| Key | Value |
+|---|---|
+| `DATABASE_URL` | Your Render Postgres **External** (or Internal) URL |
+| `AUTH_SECRET` | Long random string (or let Render generate) |
+| `ADMIN_EMAIL` | `admin@barbear.com` |
+| `ADMIN_PASSWORD` | Strong password |
+| `NEXT_PUBLIC_APP_URL` | `https://YOUR-SERVICE.onrender.com` |
+| `UPLOAD_DIR` | `/var/data/uploads` |
+
+### 4. Persistent disk (photos)
+
+Add a disk so competitor photos survive restarts:
+
+- **Name:** `barbear-uploads`
+- **Mount path:** `/var/data`
+- **Size:** 1 GB
+
+### 5. Create tables after first deploy
+
+In the Render shell for the service:
+
+```bash
+npm run db:setup:prod
+```
+
+Or from your laptop (with `DATABASE_URL` set to the Render DB):
+
+```bash
+DATABASE_URL='postgresql://...' npm run db:setup:prod
+```
+
+### 6. Open the site
+
+- Site: `https://YOUR-SERVICE.onrender.com`
+- Admin: `https://YOUR-SERVICE.onrender.com/admin/login`
+
+## Voting rules
+
+- One vote per phone number per competition
+- Unique constraint: `(competition_id, voter_phone)`
 
 ## Scripts
 
 ```bash
 npm run dev
 npm run build
+npm run start
 npm run db:setup
+npm run db:setup:prod
 npm run lint
 ```
-# BarBear-Competatior

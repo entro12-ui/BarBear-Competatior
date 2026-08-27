@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "db:setup": "node --env-file=.env.local scripts/db-setup.mjs",
+    "db:setup:prod": "node scripts/db-setup.mjs",
     "db:start": "docker start barbear-postgres || docker run -d --name barbear-postgres -e POSTGRES_USER=barbear -e POSTGRES_PASSWORD=barbear -e POSTGRES_DB=barbear -p 55432:5432 postgres:16-alpine"
   },
   "dependencies": {

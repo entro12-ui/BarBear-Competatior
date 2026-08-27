@@ -7,6 +7,7 @@ import {
 import { CompetitorCard } from "@/components/competitors/competitor-card";
 import { SiteFooter, SiteHeader } from "@/components/layout/site-chrome";
 import {
+  getCompetitionResults,
   getCompetitorCount,
   getCompetitors,
   getFeaturedCompetition,
@@ -80,12 +81,27 @@ export default async function HomePage() {
     );
   }
 
-  const [competitorCount, competitors] = await Promise.all([
+  const [competitorCount, competitors, results] = await Promise.all([
     getCompetitorCount(competition.id),
     getCompetitors(competition.id),
+    getCompetitionResults(competition.id),
   ]);
 
-  const preview = competitors.slice(0, 3);
+  const voteMap = new Map(
+    results.map((row, index) => [
+      row.competitor_id,
+      { votes: row.total_votes, rank: index + 1 },
+    ])
+  );
+
+  const preview = [...competitors]
+    .sort((a, b) => {
+      const av = voteMap.get(a.id)?.votes ?? 0;
+      const bv = voteMap.get(b.id)?.votes ?? 0;
+      if (bv !== av) return bv - av;
+      return a.competition_number - b.competition_number;
+    })
+    .slice(0, 3);
 
   return (
     <>
@@ -122,14 +138,18 @@ export default async function HomePage() {
               <p className="text-white/50">Competitors will appear once published.</p>
             ) : (
               <div className="space-y-3">
-                {preview.map((competitor, index) => (
-                  <CompetitorCard
-                    key={competitor.id}
-                    competitor={competitor}
-                    rank={index + 1}
-                    votingOpen={competition.status === "active"}
-                  />
-                ))}
+                {preview.map((competitor) => {
+                  const stats = voteMap.get(competitor.id);
+                  return (
+                    <CompetitorCard
+                      key={competitor.id}
+                      competitor={competitor}
+                      rank={stats?.rank ?? 1}
+                      voteCount={stats?.votes ?? 0}
+                      votingOpen={competition.status === "active"}
+                    />
+                  );
+                })}
               </div>
             )}
           </div>

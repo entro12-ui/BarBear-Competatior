@@ -39,7 +39,7 @@ export default async function AdminCompetitorsPage() {
               <th className="px-4 py-3">Name</th>
               <th className="px-4 py-3">Barber</th>
               <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Images</th>
+              <th className="px-4 py-3">Photo</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
@@ -55,7 +55,7 @@ export default async function AdminCompetitorsPage() {
                   <Badge variant="secondary">{competitor.status}</Badge>
                 </td>
                 <td className="px-4 py-3">
-                  {(competitor.images ?? []).length}/4
+                  {competitor.profile_photo_url ? "Yes" : "No"}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex justify-end gap-3">

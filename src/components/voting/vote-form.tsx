@@ -60,6 +60,9 @@ export function VoteForm({
         toast.error(result.error);
         return;
       }
+      toast.success(
+        `Vote successful for ${formatCompetitionNumber(competitor.competition_number)} ${competitor.full_name}`
+      );
       router.push(`/vote/success?competitor=${competitor.id}`);
     });
   }

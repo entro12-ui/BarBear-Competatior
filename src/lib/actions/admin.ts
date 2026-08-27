@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import type { ActionResult } from "@/lib/actions/queries";
 import { requireAdmin } from "@/lib/actions/queries";
 import { query, queryOne } from "@/lib/db";
@@ -115,23 +116,39 @@ export async function deleteCompetition(id: string): Promise<ActionResult> {
 }
 
 export async function createCompetitor(
-  input: unknown,
-  photoFormData?: FormData
-): Promise<ActionResult<{ id: string }>> {
+  _prev: ActionResult | null,
+  formData: FormData
+): Promise<ActionResult> {
   const auth = await requireAdmin();
   if (!auth.success) return auth;
 
-  const parsed = competitorFormSchema.safeParse(input);
+  const photo = formData.get("photo");
+  if (!(photo instanceof File) || photo.size === 0) {
+    return { success: false, error: "Please upload a photo for this competitor." };
+  }
+
+  const parsed = competitorFormSchema.safeParse({
+    competition_id: formData.get("competition_id"),
+    full_name: formData.get("full_name"),
+    barber_name: formData.get("barber_name"),
+    competition_number: formData.get("competition_number"),
+    short_bio: formData.get("short_bio") ?? "",
+    description: formData.get("description") ?? "",
+    phone: formData.get("phone") ?? "",
+    status: formData.get("status") ?? "published",
+    instagram_url: formData.get("instagram_url") ?? "",
+    tiktok_url: formData.get("tiktok_url") ?? "",
+    facebook_url: formData.get("facebook_url") ?? "",
+    youtube_url: formData.get("youtube_url") ?? "",
+    telegram_url: formData.get("telegram_url") ?? "",
+    website_url: formData.get("website_url") ?? "",
+  });
+
   if (!parsed.success) {
     return {
       success: false,
       error: parsed.error.issues[0]?.message ?? "Invalid competitor data",
     };
-  }
-
-  const photo = photoFormData?.get("file");
-  if (!(photo instanceof File) || photo.size === 0) {
-    return { success: false, error: "Please upload a photo for this competitor." };
   }
 
   const data = parsed.data;
@@ -148,8 +165,8 @@ export async function createCompetitor(
         data.full_name,
         data.barber_name,
         data.competition_number,
-        data.short_bio,
-        data.description,
+        data.short_bio || "",
+        data.description || "",
         data.phone || null,
         data.status,
         data.instagram_url || null,
@@ -172,21 +189,39 @@ export async function createCompetitor(
     ]);
 
     revalidatePublic();
-    return { success: true, data: { id: row.id } };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to create";
     return { success: false, error: message };
   }
+
+  redirect("/admin/competitors");
 }
 
 export async function updateCompetitor(
   id: string,
-  input: unknown
+  _prev: ActionResult | null,
+  formData: FormData
 ): Promise<ActionResult> {
   const auth = await requireAdmin();
   if (!auth.success) return auth;
 
-  const parsed = competitorFormSchema.safeParse(input);
+  const parsed = competitorFormSchema.safeParse({
+    competition_id: formData.get("competition_id"),
+    full_name: formData.get("full_name"),
+    barber_name: formData.get("barber_name"),
+    competition_number: formData.get("competition_number"),
+    short_bio: formData.get("short_bio") ?? "",
+    description: formData.get("description") ?? "",
+    phone: formData.get("phone") ?? "",
+    status: formData.get("status") ?? "published",
+    instagram_url: formData.get("instagram_url") ?? "",
+    tiktok_url: formData.get("tiktok_url") ?? "",
+    facebook_url: formData.get("facebook_url") ?? "",
+    youtube_url: formData.get("youtube_url") ?? "",
+    telegram_url: formData.get("telegram_url") ?? "",
+    website_url: formData.get("website_url") ?? "",
+  });
+
   if (!parsed.success) {
     return {
       success: false,
@@ -218,8 +253,8 @@ export async function updateCompetitor(
         data.full_name,
         data.barber_name,
         data.competition_number,
-        data.short_bio,
-        data.description,
+        data.short_bio || "",
+        data.description || "",
         data.phone || null,
         data.status,
         data.instagram_url || null,
@@ -231,13 +266,22 @@ export async function updateCompetitor(
         id,
       ]
     );
+
+    const photo = formData.get("photo");
+    if (photo instanceof File && photo.size > 0) {
+      const { url } = await saveUploadedImage(photo, id);
+      await query(`update competitors set profile_photo_url = $1 where id = $2`, [
+        url,
+        id,
+      ]);
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to update";
     return { success: false, error: message };
   }
 
   revalidatePublic();
-  return { success: true, data: undefined };
+  redirect("/admin/competitors");
 }
 
 export async function deleteCompetitor(id: string): Promise<ActionResult> {

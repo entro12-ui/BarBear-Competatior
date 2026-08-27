@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: barbear
+    runtime: node
+    plan: starter
+    region: oregon
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    healthCheckPath: /
+    disk:
+      name: barbear-uploads
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "20.18.0"
+      - key: NODE_ENV
+        value: production
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
+      - key: DATABASE_URL
+        sync: false
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: ADMIN_EMAIL
+        value: admin@barbear.com
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false

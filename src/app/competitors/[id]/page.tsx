@@ -41,8 +41,7 @@ export default async function CompetitorDetailPage({ params }: Props) {
     competitor.images ?? []
   );
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const shareUrl = `${appUrl}/competitors/${competitor.id}`;
+  const shareUrl = `/competitors/${competitor.id}`;
   const shareText = `Vote for ${formatCompetitionNumber(competitor.competition_number)} ${competitor.full_name}`;
 
   const socialLinks = [
