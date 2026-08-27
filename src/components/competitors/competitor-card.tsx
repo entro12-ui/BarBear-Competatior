@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { CompetitorPhoto } from "@/components/competitors/competitor-photo";
 import {
   formatCompetitionNumber,
   getProfileImageUrl,
@@ -35,11 +35,9 @@ export function CompetitorCard({
       <div className="relative z-[1] pointer-events-none flex w-full">
         <div className="relative w-[38%] min-w-[120px] shrink-0 self-stretch bg-neutral-800 sm:w-40">
           {imageUrl ? (
-            <Image
+            <CompetitorPhoto
               src={imageUrl}
               alt={competitor.full_name}
-              fill
-              className="object-cover"
               sizes="160px"
             />
           ) : (

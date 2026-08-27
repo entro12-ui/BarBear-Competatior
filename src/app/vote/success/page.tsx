@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { CompetitorPhoto } from "@/components/competitors/competitor-photo";
 import { SiteFooter, SiteHeader } from "@/components/layout/site-chrome";
 import { getCompetitorById } from "@/lib/actions/queries";
 import { formatCompetitionNumber } from "@/lib/utils/format";
@@ -44,11 +44,9 @@ export default async function VoteSuccessPage({ searchParams }: Props) {
               <div className="flex items-center gap-4 p-4">
                 <div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-emerald-100">
                   {photo ? (
-                    <Image
+                    <CompetitorPhoto
                       src={photo}
                       alt={competitor.full_name}
-                      fill
-                      className="object-cover"
                       sizes="80px"
                     />
                   ) : (

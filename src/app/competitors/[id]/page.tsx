@@ -1,7 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ShareCompetitorButton } from "@/components/competitors/share-button";
+import { CompetitorPhoto } from "@/components/competitors/competitor-photo";
 import { SiteHeader } from "@/components/layout/site-chrome";
 import {
   getCompetitionResults,
@@ -78,11 +78,9 @@ export default async function CompetitorDetailPage({ params }: Props) {
         <div className="overflow-hidden rounded-2xl border border-white/10 bg-black shadow-2xl">
           <div className="relative aspect-[3/4] bg-neutral-900">
             {profileImage ? (
-              <Image
+              <CompetitorPhoto
                 src={profileImage}
                 alt={competitor.full_name}
-                fill
-                className="object-cover"
                 sizes="(max-width: 512px) 100vw, 512px"
                 priority
               />

@@ -1,7 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { DeleteCompetitorButton } from "@/components/admin/delete-competitor-button";
+import { CompetitorPhoto } from "@/components/competitors/competitor-photo";
 import {
   getCompetitions,
   getCompetitors,
@@ -78,11 +78,9 @@ export default async function AdminCompetitorsPage() {
                 <td className="px-4 py-3">
                   <div className="relative size-12 overflow-hidden rounded-md bg-muted">
                     {competitor.profile_photo_url ? (
-                      <Image
+                      <CompetitorPhoto
                         src={competitor.profile_photo_url}
                         alt={competitor.full_name}
-                        fill
-                        className="object-cover"
                         sizes="48px"
                       />
                     ) : (
