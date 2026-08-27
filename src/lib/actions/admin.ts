@@ -5,7 +5,11 @@ import { redirect } from "next/navigation";
 import type { ActionResult } from "@/lib/actions/queries";
 import { requireAdmin } from "@/lib/actions/queries";
 import { query, queryOne } from "@/lib/db";
-import { saveCompetitorProfilePhoto, ensurePhotoColumns } from "@/lib/uploads";
+import {
+  ensurePhotoColumns,
+  getUploadFromFormData,
+  saveCompetitorProfilePhoto,
+} from "@/lib/uploads";
 import {
   competitionFormSchema,
   competitorFormSchema,
@@ -121,8 +125,8 @@ export async function createCompetitor(
   const auth = await requireAdmin();
   if (!auth.success) return auth;
 
-  const photo = formData.get("photo");
-  if (!(photo instanceof Blob) || photo.size === 0) {
+  const upload = getUploadFromFormData(formData, "photo");
+  if (!upload) {
     return { success: false, error: "Please upload a photo for this competitor." };
   }
 
@@ -183,11 +187,7 @@ export async function createCompetitor(
       return { success: false, error: "Failed to create competitor" };
     }
 
-    await saveCompetitorProfilePhoto(
-      row.id,
-      photo,
-      photo instanceof File ? photo.name : undefined
-    );
+    await saveCompetitorProfilePhoto(row.id, upload.blob, upload.name);
 
     revalidatePublic();
   } catch (error) {
@@ -270,13 +270,9 @@ export async function updateCompetitor(
       ]
     );
 
-    const photo = formData.get("photo");
-    if (photo instanceof Blob && photo.size > 0) {
-      await saveCompetitorProfilePhoto(
-        id,
-        photo,
-        photo instanceof File ? photo.name : undefined
-      );
+    const upload = getUploadFromFormData(formData, "photo");
+    if (upload) {
+      await saveCompetitorProfilePhoto(id, upload.blob, upload.name);
     }
   } catch (error) {
     console.error("updateCompetitor error", error);
@@ -285,6 +281,8 @@ export async function updateCompetitor(
   }
 
   revalidatePublic();
+  revalidatePath(`/competitors/${id}`);
+  revalidatePath(`/admin/competitors/${id}/edit`);
   redirect("/admin/competitors");
 }
 
@@ -305,14 +303,18 @@ export async function uploadCompetitorImage(params: {
   const auth = await requireAdmin();
   if (!auth.success) return auth;
 
-  const file = params.formData.get("file");
-  if (!(file instanceof Blob) || file.size === 0) {
+  const upload = getUploadFromFormData(params.formData, "file");
+  if (!upload) {
     return { success: false, error: "No image file provided." };
   }
 
   try {
     if (params.imageType === "profile") {
-      const { url } = await saveCompetitorProfilePhoto(params.competitorId, file);
+      const { url } = await saveCompetitorProfilePhoto(
+        params.competitorId,
+        upload.blob,
+        upload.name
+      );
       revalidatePublic();
       return { success: true, data: { url } };
     }

@@ -50,7 +50,6 @@ export function CompetitorForm({ competitions, competitor }: Props) {
         const compressed = await compressImageFile(photo);
         formData.set("photo", compressed);
       } catch {
-        // Keep original file if compression fails (e.g. HEIC on some browsers)
         formData.set("photo", photo);
       }
     } else if (!isEdit) {
@@ -94,7 +93,9 @@ export function CompetitorForm({ competitions, competitor }: Props) {
         <p className="text-xs text-muted-foreground">
           Any photo type works (JPG, PNG, WEBP, GIF, HEIC, and more). Max 5MB —
           we compress before upload.
-          {!isEdit ? " Required." : " Leave empty to keep the current photo."}
+          {!isEdit
+            ? " Required."
+            : " Choose a new file to replace the current photo."}
         </p>
         {preview && (
           // eslint-disable-next-line @next/next/no-img-element

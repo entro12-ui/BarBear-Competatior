@@ -5,7 +5,6 @@ function isAllowedImage(mime: string, fileName?: string): boolean {
   if (type.startsWith("image/") && type !== "image/svg+xml") {
     return true;
   }
-  // Some phones send an empty MIME — allow by extension
   const ext = fileName?.split(".").pop()?.toLowerCase();
   return Boolean(
     ext &&
@@ -19,6 +18,27 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 let columnsReady = false;
 
+/** FormData files from Server Actions are not always `instanceof Blob/File`. */
+export function getUploadFromFormData(
+  formData: FormData,
+  key = "photo"
+): { blob: Blob; name?: string } | null {
+  const value = formData.get(key);
+  if (!value || typeof value === "string") return null;
+
+  const blob = value as Blob;
+  const size = Number(blob.size ?? 0);
+  if (!size || size <= 0) return null;
+  if (typeof blob.arrayBuffer !== "function") return null;
+
+  const name =
+    "name" in value && typeof (value as File).name === "string"
+      ? (value as File).name
+      : undefined;
+
+  return { blob, name };
+}
+
 /** Ensure photo byte columns exist (Render + local). */
 export async function ensurePhotoColumns(): Promise<void> {
   if (columnsReady) return;
@@ -27,7 +47,6 @@ export async function ensurePhotoColumns(): Promise<void> {
       add column if not exists profile_photo_bytes bytea,
       add column if not exists profile_photo_mime text
   `);
-  // Allow codes like B001 / #12 (migrate from integer if needed)
   await query(`
     do $$
     begin
@@ -49,8 +68,8 @@ export async function ensurePhotoColumns(): Promise<void> {
 }
 
 /**
- * Store competitor photo in Postgres (works on Render without a disk).
- * Public URL: /api/media/{competitorId}
+ * Store competitor photo in Postgres.
+ * URL includes a version query so browsers load the new image after edit.
  */
 export async function saveCompetitorProfilePhoto(
   competitorId: string,
@@ -59,7 +78,7 @@ export async function saveCompetitorProfilePhoto(
 ): Promise<{ url: string }> {
   const name =
     fileName ||
-    (file instanceof File ? file.name : undefined) ||
+    (typeof File !== "undefined" && file instanceof File ? file.name : undefined) ||
     "photo.jpg";
   const mime = (file.type || guessMimeFromName(name) || "image/jpeg").toLowerCase();
 
@@ -73,7 +92,8 @@ export async function saveCompetitorProfilePhoto(
   await ensurePhotoColumns();
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const url = `/api/media/${competitorId}`;
+  // Cache-bust so Next/Image and browsers don't keep the old photo
+  const url = `/api/media/${competitorId}?v=${Date.now()}`;
 
   await query(
     `update competitors
@@ -129,7 +149,7 @@ export async function getCompetitorPhoto(
   };
 }
 
-/** @deprecated Prefer saveCompetitorProfilePhoto — kept for any filesystem callers */
+/** @deprecated Prefer saveCompetitorProfilePhoto */
 export async function saveUploadedImage(
   file: File,
   folder: string
