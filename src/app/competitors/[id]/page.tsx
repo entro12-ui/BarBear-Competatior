@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ShareCompetitorButton } from "@/components/competitors/share-button";
 import { CompetitorPhoto } from "@/components/competitors/competitor-photo";
+import { InstantLink } from "@/components/layout/instant-link";
 import { SiteHeader } from "@/components/layout/site-chrome";
 import {
   getCompetitionResults,
@@ -166,12 +167,13 @@ export default async function CompetitorDetailPage({ params }: Props) {
               </span>
             </p>
             {votingOpen ? (
-              <Link
+              <InstantLink
                 href={`/vote?competitor=${competitor.id}`}
                 className="shrink-0 rounded-full bg-gradient-to-r from-[#9b1c2e] to-[#d94a2a] px-8 py-3 text-sm font-bold tracking-wide text-white shadow-lg"
+                pendingClassName="opacity-70"
               >
                 Voting
-              </Link>
+              </InstantLink>
             ) : (
               <span className="text-sm text-white/40">Closed</span>
             )}

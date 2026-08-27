@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Cormorant_Garamond, Figtree, Geist_Mono } from "next/font/google";
+import { NavigationProgress } from "@/components/layout/navigation-progress";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -40,6 +42,9 @@ export default function RootLayout({
       className={`${cormorant.variable} ${figtree.variable} ${geistMono.variable} h-full`}
     >
       <body className="min-h-full flex flex-col">
+        <Suspense fallback={null}>
+          <NavigationProgress />
+        </Suspense>
         {children}
         <Toaster richColors position="top-center" />
       </body>

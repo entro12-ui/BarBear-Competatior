@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { InstantLink } from "@/components/layout/instant-link";
 import { CompetitorPhoto } from "@/components/competitors/competitor-photo";
 import {
   formatCompetitionNumber,
@@ -26,7 +26,7 @@ export function CompetitorCard({
 
   return (
     <article className="relative flex overflow-hidden rounded-2xl border border-white/10 bg-[#141414] text-white shadow-[0_12px_40px_-20px_rgba(0,0,0,0.7)]">
-      <Link
+      <InstantLink
         href={`/competitors/${competitor.id}`}
         className="absolute inset-0 z-0"
         aria-label={`Open ${competitor.full_name} profile`}
@@ -73,12 +73,13 @@ export function CompetitorCard({
           )}
 
           {votingOpen ? (
-            <Link
+            <InstantLink
               href={`/vote?competitor=${competitor.id}`}
               className="pointer-events-auto relative z-[2] ml-auto inline-flex items-center justify-center rounded-lg bg-white px-6 py-2 text-sm font-semibold text-black transition hover:bg-[#e8c878]"
+              pendingClassName="opacity-60"
             >
               Vote
-            </Link>
+            </InstantLink>
           ) : (
             <span className="ml-auto text-xs text-white/40">Voting closed</span>
           )}

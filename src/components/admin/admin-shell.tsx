@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { InstantLink } from "@/components/layout/instant-link";
 import { adminLogout } from "@/lib/actions/voting";
 import { Button } from "@/components/ui/button";
 
@@ -22,25 +22,29 @@ export function AdminShell({
       <div className="border-b border-border bg-card/90">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-8">
-            <Link href="/admin/dashboard" className="font-display text-2xl">
+            <InstantLink
+              href="/admin/dashboard"
+              className="font-display text-2xl"
+            >
               Barbear Admin
-            </Link>
+            </InstantLink>
             <nav className="hidden gap-4 md:flex">
               {links.map((link) => (
-                <Link
+                <InstantLink
                   key={link.href}
                   href={link.href}
                   className="text-sm text-muted-foreground transition hover:text-ink"
+                  pendingClassName="text-ink opacity-70"
                 >
                   {link.label}
-                </Link>
+                </InstantLink>
               ))}
             </nav>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/" className="text-sm text-brass">
+            <InstantLink href="/" className="text-sm text-brass">
               View site
-            </Link>
+            </InstantLink>
             <form action={adminLogout}>
               <Button type="submit" variant="outline" size="sm">
                 Log out
