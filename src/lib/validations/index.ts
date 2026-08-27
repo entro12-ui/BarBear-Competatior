@@ -48,7 +48,15 @@ export const competitorFormSchema = z.object({
   competition_id: z.string().uuid(),
   full_name: z.string().trim().min(2, "Full name is required"),
   barber_name: z.string().trim().min(2, "Barber name is required"),
-  competition_number: z.coerce.number().int().positive(),
+  competition_number: z
+    .string()
+    .trim()
+    .min(1, "Competition number is required")
+    .max(32, "Competition number is too long")
+    .regex(
+      /^[A-Za-z0-9#\-_./+]+$/,
+      "Use a number or code like 12, B001, #05, or A-01"
+    ),
   short_bio: z.string().trim().optional().or(z.literal("")),
   description: z.string().trim().optional().or(z.literal("")),
   phone: z.string().trim().optional().or(z.literal("")),

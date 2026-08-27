@@ -10,8 +10,26 @@ export function normalizePhone(phone: string): string {
   return hasPlus ? `+${digits}` : digits;
 }
 
-export function formatCompetitionNumber(num: number): string {
-  return `#${String(num).padStart(2, "0")}`;
+export function formatCompetitionNumber(num: string | number | null | undefined): string {
+  const value = String(num ?? "").trim();
+  if (!value) return "#—";
+  // Pure digits → #01 style
+  if (/^\d+$/.test(value)) {
+    return `#${value.padStart(2, "0")}`;
+  }
+  // Codes like B001, #12, A-01 — show as entered
+  return value;
+}
+
+/** Sort helper for codes like 12, B001, A-10 */
+export function compareCompetitionNumbers(
+  a: string | number,
+  b: string | number
+): number {
+  return String(a).localeCompare(String(b), undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
 }
 
 export function slugify(value: string): string {

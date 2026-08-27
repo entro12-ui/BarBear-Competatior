@@ -34,7 +34,11 @@ export default async function AdminCompetitorsPage() {
       if (a.competitionName !== b.competitionName) {
         return a.competitionName.localeCompare(b.competitionName);
       }
-      return a.competition_number - b.competition_number;
+      return String(a.competition_number).localeCompare(
+        String(b.competition_number),
+        undefined,
+        { numeric: true, sensitivity: "base" }
+      );
     });
 
   return (

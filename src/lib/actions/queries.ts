@@ -196,7 +196,7 @@ export async function getCompetitionResults(
     competition_id: string;
     full_name: string;
     barber_name: string;
-    competition_number: number;
+    competition_number: string;
     profile_photo_url: string | null;
   }>(
     `select id, competition_id, full_name, barber_name, competition_number, profile_photo_url

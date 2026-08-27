@@ -165,7 +165,7 @@ export async function createCompetitor(
         data.competition_id,
         data.full_name,
         data.barber_name,
-        data.competition_number,
+        String(data.competition_number).trim(),
         data.short_bio || "",
         data.description || "",
         data.phone || null,
@@ -183,7 +183,11 @@ export async function createCompetitor(
       return { success: false, error: "Failed to create competitor" };
     }
 
-    await saveCompetitorProfilePhoto(row.id, photo);
+    await saveCompetitorProfilePhoto(
+      row.id,
+      photo,
+      photo instanceof File ? photo.name : undefined
+    );
 
     revalidatePublic();
   } catch (error) {
@@ -229,6 +233,7 @@ export async function updateCompetitor(
 
   const data = parsed.data;
   try {
+    await ensurePhotoColumns();
     await query(
       `update competitors set
          competition_id = $1,
@@ -250,7 +255,7 @@ export async function updateCompetitor(
         data.competition_id,
         data.full_name,
         data.barber_name,
-        data.competition_number,
+        String(data.competition_number).trim(),
         data.short_bio || "",
         data.description || "",
         data.phone || null,
@@ -267,7 +272,11 @@ export async function updateCompetitor(
 
     const photo = formData.get("photo");
     if (photo instanceof Blob && photo.size > 0) {
-      await saveCompetitorProfilePhoto(id, photo);
+      await saveCompetitorProfilePhoto(
+        id,
+        photo,
+        photo instanceof File ? photo.name : undefined
+      );
     }
   } catch (error) {
     console.error("updateCompetitor error", error);

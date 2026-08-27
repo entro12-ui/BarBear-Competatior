@@ -99,7 +99,11 @@ export default async function HomePage() {
       const av = voteMap.get(a.id)?.votes ?? 0;
       const bv = voteMap.get(b.id)?.votes ?? 0;
       if (bv !== av) return bv - av;
-      return a.competition_number - b.competition_number;
+      return String(a.competition_number).localeCompare(
+        String(b.competition_number),
+        undefined,
+        { numeric: true, sensitivity: "base" }
+      );
     })
     .slice(0, 3);
 

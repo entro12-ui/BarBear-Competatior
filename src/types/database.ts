@@ -45,7 +45,7 @@ export interface Competitor {
   short_bio: string;
   description: string;
   phone: string | null;
-  competition_number: number;
+  competition_number: string;
   status: CompetitorStatus;
   instagram_url: string | null;
   tiktok_url: string | null;
@@ -103,7 +103,7 @@ export interface CompetitionResult {
   competitor_id: string;
   full_name: string;
   barber_name: string;
-  competition_number: number;
+  competition_number: string;
   profile_photo_url: string | null;
   total_votes: number;
   vote_percentage: number;

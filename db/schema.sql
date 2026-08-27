@@ -66,7 +66,7 @@ create table if not exists public.competitors (
   short_bio text not null default '',
   description text not null default '',
   phone text,
-  competition_number integer not null,
+  competition_number text not null,
   status public.competitor_status not null default 'draft',
   instagram_url text,
   tiktok_url text,

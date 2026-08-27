@@ -50,8 +50,8 @@ export function CompetitorForm({ competitions, competitor }: Props) {
         const compressed = await compressImageFile(photo);
         formData.set("photo", compressed);
       } catch {
-        setClientError("Could not process the photo. Try a JPG under 2MB.");
-        return { success: false, error: "Could not process the photo." };
+        // Keep original file if compression fails (e.g. HEIC on some browsers)
+        formData.set("photo", photo);
       }
     } else if (!isEdit) {
       return { success: false, error: "Please upload a photo for this competitor." };
@@ -80,7 +80,7 @@ export function CompetitorForm({ competitions, competitor }: Props) {
           id="photo"
           name="photo"
           type="file"
-          accept="image/jpeg,image/png,image/webp"
+          accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.bmp,.heic,.heif,.avif"
           required={!isEdit}
           onChange={(e) => {
             const file = e.target.files?.[0];
@@ -92,7 +92,8 @@ export function CompetitorForm({ competitions, competitor }: Props) {
           }}
         />
         <p className="text-xs text-muted-foreground">
-          One photo shown to voters. Prefer JPG under 2MB (we compress before upload).
+          Any photo type works (JPG, PNG, WEBP, GIF, HEIC, and more). Max 5MB —
+          we compress before upload.
           {!isEdit ? " Required." : " Leave empty to keep the current photo."}
         </p>
         {preview && (
@@ -145,15 +146,18 @@ export function CompetitorForm({ competitions, competitor }: Props) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="competition_number">Competition Number</Label>
+          <Label htmlFor="competition_number">Competition Number / Code</Label>
           <Input
             id="competition_number"
             name="competition_number"
-            type="number"
-            min={1}
+            type="text"
             required
-            defaultValue={competitor?.competition_number ?? 1}
+            placeholder="e.g. 12, B001, #05, A-01"
+            defaultValue={competitor?.competition_number ?? ""}
           />
+          <p className="text-xs text-muted-foreground">
+            Number or code with letters/symbols (B001, #12, A-01…).
+          </p>
         </div>
         <div className="space-y-2">
           <Label htmlFor="status">Status</Label>
