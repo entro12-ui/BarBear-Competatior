@@ -8,7 +8,7 @@ import {
   verifyPassword,
 } from "@/lib/auth";
 import { isDatabaseConfigured, queryOne } from "@/lib/db";
-import { normalizePhone } from "@/lib/utils/format";
+import { isVotingOpen, normalizePhone } from "@/lib/utils/format";
 import { voteRequestSchema } from "@/lib/validations";
 import type { ActionResult } from "@/lib/actions/queries";
 import { checkPhoneVoteStatus } from "@/lib/actions/queries";
@@ -47,10 +47,11 @@ export async function submitVote(
       return { success: false, error: "Competition not found." };
     }
 
-    if (competition.status !== "active") {
+    if (!isVotingOpen(competition)) {
       return {
         success: false,
-        error: "Voting for this competition has ended.",
+        error:
+          "Voting is closed. No more votes are accepted. The final will be held by judges at Vamdas Cinema, Megenagna.",
       };
     }
 

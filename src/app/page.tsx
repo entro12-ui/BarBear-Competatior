@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   CompetitionInfo,
+  FinalsSection,
   HeroSection,
   VotingRules,
 } from "@/components/competition/landing-sections";
@@ -12,7 +13,7 @@ import {
   getCompetitors,
   getFeaturedCompetition,
 } from "@/lib/actions/queries";
-import { isDatabaseConfigured } from "@/lib/utils/format";
+import { isDatabaseConfigured, isVotingOpen } from "@/lib/utils/format";
 
 export const dynamic = "force-dynamic";
 
@@ -119,6 +120,7 @@ export default async function HomePage() {
           competition={competition}
           competitorCount={competitorCount}
         />
+        <FinalsSection />
         <VotingRules rules={competition.rules} />
 
         <section className="bg-[#0a0a0a] px-4 py-16 text-white">
@@ -150,7 +152,7 @@ export default async function HomePage() {
                       competitor={competitor}
                       rank={stats?.rank ?? 1}
                       voteCount={stats?.votes ?? 0}
-                      votingOpen={competition.status === "active"}
+                      votingOpen={isVotingOpen(competition)}
                     />
                   );
                 })}

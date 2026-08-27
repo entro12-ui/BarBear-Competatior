@@ -10,6 +10,7 @@ import {
 import {
   formatCompetitionNumber,
   getProfileImageUrl,
+  isVotingOpen,
 } from "@/lib/utils/format";
 
 type Props = {
@@ -29,7 +30,7 @@ export default async function CompetitorDetailPage({ params }: Props) {
   if (!competitor) notFound();
 
   const competition = competitor.competition;
-  const votingOpen = competition?.status === "active";
+  const votingOpen = isVotingOpen(competition);
   const results = await getCompetitionResults(competitor.competition_id);
   const rankIndex = results.findIndex((r) => r.competitor_id === competitor.id);
   const rank = rankIndex >= 0 ? rankIndex + 1 : undefined;

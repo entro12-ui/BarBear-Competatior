@@ -6,6 +6,7 @@ import {
   getCompetitors,
   getFeaturedCompetition,
 } from "@/lib/actions/queries";
+import { isVotingOpen } from "@/lib/utils/format";
 
 export const dynamic = "force-dynamic";
 
@@ -40,14 +41,16 @@ export default async function CompetitorsPage() {
     );
   });
 
-  const votingOpen = competition?.status === "active";
+  const votingOpen = isVotingOpen(competition);
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       <SiteHeader variant="dark" />
       <main className="mx-auto max-w-lg px-4 pb-24 pt-24">
         <div className="mb-6 rounded-xl bg-[#7a1f2b] px-4 py-3 text-center text-sm leading-snug text-white/95">
-          One vote per phone number. Choose your favorite style.
+          {votingOpen
+            ? "One vote per phone number. Voting closes Sunday, Aug 30 at 6:00 PM. Final by judges at Vamdas Cinema, Megenagna."
+            : "Voting is closed. The final will be held by judges at Vamdas Cinema, Megenagna."}
         </div>
 
         {!competition || ranked.length === 0 ? (

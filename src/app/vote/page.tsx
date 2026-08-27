@@ -5,6 +5,7 @@ import {
   getCompetitionById,
   getCompetitorById,
 } from "@/lib/actions/queries";
+import { isVotingOpen } from "@/lib/utils/format";
 
 type Props = {
   searchParams: Promise<{ competitor?: string }>;
@@ -38,7 +39,7 @@ export default async function VotePage({ searchParams }: Props) {
             competitor={competitor}
             competitionId={competition.id}
             competitionName={competition.name}
-            votingOpen={competition.status === "active"}
+            votingOpen={isVotingOpen(competition)}
           />
         </div>
       </main>

@@ -47,7 +47,11 @@ export function VoteForm({
       <div className="rounded-2xl border border-white/10 bg-[#141414] p-6">
         <h2 className="text-2xl font-semibold">Voting closed</h2>
         <p className="mt-2 text-white/60">
-          Voting for this competition has ended.
+          Public voting ended on Sunday, August 30, 2026 at 6:00 PM (Addis
+          Ababa). No more votes can be submitted.
+        </p>
+        <p className="mt-4 text-sm text-[#e8c878]">
+          The final will be held by judges at Vamdas Cinema, Megenagna.
         </p>
       </div>
     );
