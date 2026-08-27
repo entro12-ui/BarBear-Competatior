@@ -5,13 +5,12 @@ import { redirect } from "next/navigation";
 import type { ActionResult } from "@/lib/actions/queries";
 import { requireAdmin } from "@/lib/actions/queries";
 import { query, queryOne } from "@/lib/db";
-import { saveUploadedImage } from "@/lib/uploads";
+import { saveCompetitorProfilePhoto, ensurePhotoColumns } from "@/lib/uploads";
 import {
   competitionFormSchema,
   competitorFormSchema,
 } from "@/lib/validations";
 import type { ImageType } from "@/types/database";
-import { STYLE_IMAGE_TYPES } from "@/types/database";
 
 function revalidatePublic() {
   revalidatePath("/");
@@ -123,7 +122,7 @@ export async function createCompetitor(
   if (!auth.success) return auth;
 
   const photo = formData.get("photo");
-  if (!(photo instanceof File) || photo.size === 0) {
+  if (!(photo instanceof Blob) || photo.size === 0) {
     return { success: false, error: "Please upload a photo for this competitor." };
   }
 
@@ -153,6 +152,8 @@ export async function createCompetitor(
 
   const data = parsed.data;
   try {
+    await ensurePhotoColumns();
+
     const row = await queryOne<{ id: string }>(
       `insert into competitors (
          competition_id, full_name, barber_name, competition_number,
@@ -182,14 +183,11 @@ export async function createCompetitor(
       return { success: false, error: "Failed to create competitor" };
     }
 
-    const { url } = await saveUploadedImage(photo, row.id);
-    await query(`update competitors set profile_photo_url = $1 where id = $2`, [
-      url,
-      row.id,
-    ]);
+    await saveCompetitorProfilePhoto(row.id, photo);
 
     revalidatePublic();
   } catch (error) {
+    console.error("createCompetitor error", error);
     const message = error instanceof Error ? error.message : "Failed to create";
     return { success: false, error: message };
   }
@@ -268,14 +266,11 @@ export async function updateCompetitor(
     );
 
     const photo = formData.get("photo");
-    if (photo instanceof File && photo.size > 0) {
-      const { url } = await saveUploadedImage(photo, id);
-      await query(`update competitors set profile_photo_url = $1 where id = $2`, [
-        url,
-        id,
-      ]);
+    if (photo instanceof Blob && photo.size > 0) {
+      await saveCompetitorProfilePhoto(id, photo);
     }
   } catch (error) {
+    console.error("updateCompetitor error", error);
     const message = error instanceof Error ? error.message : "Failed to update";
     return { success: false, error: message };
   }
@@ -302,35 +297,21 @@ export async function uploadCompetitorImage(params: {
   if (!auth.success) return auth;
 
   const file = params.formData.get("file");
-  if (!(file instanceof File)) {
+  if (!(file instanceof Blob) || file.size === 0) {
     return { success: false, error: "No image file provided." };
   }
 
   try {
-    const { url } = await saveUploadedImage(file, params.competitorId);
-
     if (params.imageType === "profile") {
-      await query(
-        `update competitors set profile_photo_url = $1 where id = $2`,
-        [url, params.competitorId]
-      );
-    } else {
-      if (!STYLE_IMAGE_TYPES.includes(params.imageType)) {
-        return { success: false, error: "Invalid image type." };
-      }
-
-      const sortOrder = STYLE_IMAGE_TYPES.indexOf(params.imageType);
-      await query(
-        `insert into competitor_images (competitor_id, image_type, image_url, sort_order)
-         values ($1, $2, $3, $4)
-         on conflict (competitor_id, image_type)
-         do update set image_url = excluded.image_url, sort_order = excluded.sort_order`,
-        [params.competitorId, params.imageType, url, sortOrder]
-      );
+      const { url } = await saveCompetitorProfilePhoto(params.competitorId, file);
+      revalidatePublic();
+      return { success: true, data: { url } };
     }
 
-    revalidatePublic();
-    return { success: true, data: { url } };
+    return {
+      success: false,
+      error: "Only profile photos are supported.",
+    };
   } catch (error) {
     return {
       success: false,

@@ -61,6 +61,8 @@ create table if not exists public.competitors (
   full_name text not null,
   barber_name text not null,
   profile_photo_url text,
+  profile_photo_bytes bytea,
+  profile_photo_mime text,
   short_bio text not null default '',
   description text not null default '',
   phone text,

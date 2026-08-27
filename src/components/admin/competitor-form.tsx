@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { createCompetitor, updateCompetitor } from "@/lib/actions/admin";
 import type { ActionResult } from "@/lib/actions/queries";
+import { compressImageFile } from "@/lib/utils/compress-image";
 import type { Competition, CompetitorWithImages } from "@/types/database";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,17 +34,46 @@ export function CompetitorForm({ competitions, competitor }: Props) {
   const [preview, setPreview] = useState<string | null>(
     competitor?.profile_photo_url ?? null
   );
+  const [clientError, setClientError] = useState<string | null>(null);
 
   const boundUpdate = updateCompetitor.bind(null, competitor?.id ?? "");
-  const [state, formAction] = useActionState(
-    isEdit ? boundUpdate : createCompetitor,
-    null as ActionResult | null
-  );
 
-  const error = state && !state.success ? state.error : null;
+  async function formAction(
+    prev: ActionResult | null,
+    formData: FormData
+  ): Promise<ActionResult> {
+    setClientError(null);
+    const photo = formData.get("photo");
+
+    if (photo instanceof File && photo.size > 0) {
+      try {
+        const compressed = await compressImageFile(photo);
+        formData.set("photo", compressed);
+      } catch {
+        setClientError("Could not process the photo. Try a JPG under 2MB.");
+        return { success: false, error: "Could not process the photo." };
+      }
+    } else if (!isEdit) {
+      return { success: false, error: "Please upload a photo for this competitor." };
+    }
+
+    try {
+      return await (isEdit ? boundUpdate : createCompetitor)(prev, formData);
+    } catch (error) {
+      console.error(error);
+      const message =
+        "Upload failed (connection closed). Use a smaller JPG photo and try again.";
+      setClientError(message);
+      return { success: false, error: message };
+    }
+  }
+
+  const [state, action] = useActionState(formAction, null as ActionResult | null);
+  const error =
+    clientError || (state && !state.success ? state.error : null);
 
   return (
-    <form action={formAction} className="mx-auto max-w-2xl space-y-5">
+    <form action={action} className="mx-auto max-w-2xl space-y-5">
       <div className="space-y-2 rounded-lg border border-border bg-card/80 p-5">
         <Label htmlFor="photo">Photo</Label>
         <Input
@@ -54,11 +84,15 @@ export function CompetitorForm({ competitions, competitor }: Props) {
           required={!isEdit}
           onChange={(e) => {
             const file = e.target.files?.[0];
-            setPreview(file ? URL.createObjectURL(file) : competitor?.profile_photo_url ?? null);
+            setPreview(
+              file
+                ? URL.createObjectURL(file)
+                : competitor?.profile_photo_url ?? null
+            );
           }}
         />
         <p className="text-xs text-muted-foreground">
-          One photo shown to voters. JPG, PNG, or WEBP — max 5MB.
+          One photo shown to voters. Prefer JPG under 2MB (we compress before upload).
           {!isEdit ? " Required." : " Leave empty to keep the current photo."}
         </p>
         {preview && (
