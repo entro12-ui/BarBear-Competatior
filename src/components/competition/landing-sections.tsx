@@ -13,10 +13,20 @@ export function HeroSection({ competition, competitorCount }: Props) {
 
   return (
     <section className="relative min-h-[100svh] overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(245,197,24,0.22),transparent_40%),radial-gradient(circle_at_80%_10%,rgba(139,58,28,0.28),transparent_35%),linear-gradient(135deg,#2a140c_0%,#1a0f0a_55%,#3d1f12_100%)]" />
-      <div className="grain absolute inset-0 opacity-[0.12] mix-blend-soft-light" />
-      <div className="absolute inset-y-0 right-0 hidden w-[46%] bg-[url('https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=1400&q=80')] bg-cover bg-center opacity-70 md:block" />
-      <div className="absolute inset-y-0 right-0 hidden w-[46%] bg-gradient-to-l from-transparent via-ink/20 to-ink md:block" />
+      {/* Full-bleed hero photo — mobile + desktop */}
+      <div className="absolute inset-0">
+        <Image
+          src="/barbear-pic.png"
+          alt="Ethiopian barber competition"
+          fill
+          priority
+          className="object-cover object-center"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#1a0f0a]/92 via-[#1a0f0a]/75 to-[#1a0f0a]/45" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#1a0f0a]/90 via-transparent to-[#1a0f0a]/40" />
+      </div>
+      <div className="grain absolute inset-0 opacity-[0.1] mix-blend-soft-light" />
 
       <div className="relative mx-auto flex min-h-[100svh] max-w-7xl flex-col justify-end px-6 pb-20 pt-32 md:justify-center md:px-10 md:pb-24">
         <div className="max-w-xl animate-in fade-in slide-in-from-bottom-4 duration-700">

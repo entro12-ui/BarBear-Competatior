@@ -7,17 +7,12 @@ services:
     buildCommand: npm install && npm run build
     startCommand: npm run start
     healthCheckPath: /
-    disk:
-      name: barbear-uploads
-      mountPath: /var/data
-      sizeGB: 1
     envVars:
       - key: NODE_VERSION
         value: "20.18.0"
       - key: NODE_ENV
         value: production
-      - key: UPLOAD_DIR
-        value: /var/data/uploads
+      # Leave UPLOAD_DIR unset unless you attach a disk mounted at /var/data
       - key: DATABASE_URL
         sync: false
       - key: AUTH_SECRET

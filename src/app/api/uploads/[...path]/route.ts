@@ -1,7 +1,7 @@
 import { createReadStream, existsSync, statSync } from "fs";
 import path from "path";
 import { Readable } from "stream";
-import { getUploadRoot } from "@/lib/uploads";
+import { resolveUploadRoot } from "@/lib/uploads";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,12 +21,11 @@ export async function GET(_request: Request, { params }: Params) {
     return new Response("Not found", { status: 404 });
   }
 
-  // Prevent path traversal
   if (segments.some((part) => part === ".." || part.includes("\0"))) {
     return new Response("Not found", { status: 404 });
   }
 
-  const root = getUploadRoot();
+  const { root } = await resolveUploadRoot();
   const filePath = path.resolve(root, ...segments);
   if (!filePath.startsWith(path.resolve(root))) {
     return new Response("Not found", { status: 404 });

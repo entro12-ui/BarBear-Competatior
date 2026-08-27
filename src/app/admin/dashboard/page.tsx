@@ -79,8 +79,14 @@ export default async function AdminDashboardPage() {
 
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
-              href="/admin/competitors/new"
+              href="/admin/competitors"
               className="bg-ink px-4 py-2 text-sm text-stone"
+            >
+              Manage competitors
+            </Link>
+            <Link
+              href="/admin/competitors/new"
+              className="border border-border px-4 py-2 text-sm"
             >
               Add competitor
             </Link>

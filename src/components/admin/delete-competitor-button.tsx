@@ -4,18 +4,25 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { deleteCompetitor } from "@/lib/actions/admin";
+import { Button } from "@/components/ui/button";
 
 export function DeleteCompetitorButton({ id }: { id: string }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
   return (
-    <button
+    <Button
       type="button"
+      variant="outline"
+      size="sm"
       disabled={pending}
-      className="text-destructive"
+      className="border-destructive/40 text-destructive hover:bg-destructive/10"
       onClick={() => {
-        if (!confirm("Delete this competitor and all related images/votes?")) {
+        if (
+          !confirm(
+            "Delete this competitor? Their photo and votes will be removed."
+          )
+        ) {
           return;
         }
         startTransition(async () => {
@@ -29,7 +36,7 @@ export function DeleteCompetitorButton({ id }: { id: string }) {
         });
       }}
     >
-      Delete
-    </button>
+      {pending ? "Deleting..." : "Delete"}
+    </Button>
   );
 }
