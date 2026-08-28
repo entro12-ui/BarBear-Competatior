@@ -17,10 +17,10 @@ export async function GET(_request: Request, { params }: Params) {
       return new Response("Not found", { status: 404 });
     }
 
-    return new Response(new Uint8Array(photo.bytes), {
+    return new Response(photo.bytes, {
       headers: {
         "Content-Type": photo.mime,
-        "Cache-Control": "public, max-age=60, must-revalidate",
+        "Cache-Control": "public, max-age=300, must-revalidate",
       },
     });
   } catch (error) {

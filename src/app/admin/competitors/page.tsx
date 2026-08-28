@@ -1,4 +1,4 @@
-import { InstantLink } from "@/components/layout/instant-link";
+import Link from "next/link";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { DeleteCompetitorButton } from "@/components/admin/delete-competitor-button";
 import { CompetitorPhoto } from "@/components/competitors/competitor-photo";
@@ -51,12 +51,12 @@ export default async function AdminCompetitorsPage() {
               : "No competitors yet. Add one to get started."
             : `${competitors.length} competitor${competitors.length === 1 ? "" : "s"} — edit or delete below.`}
         </p>
-        <InstantLink
+        <Link
           href="/admin/competitors/new"
           className={cn(buttonVariants(), "bg-ink text-stone hover:bg-brass")}
         >
           New competitor
-        </InstantLink>
+        </Link>
       </div>
 
       <div className="overflow-x-auto border border-border bg-card">
@@ -103,14 +103,14 @@ export default async function AdminCompetitorsPage() {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-2">
-                    <InstantLink
+                    <Link
                       href={`/admin/competitors/${competitor.id}/edit`}
                       className={cn(
                         buttonVariants({ variant: "outline", size: "sm" })
                       )}
                     >
                       Edit
-                    </InstantLink>
+                    </Link>
                     <DeleteCompetitorButton id={competitor.id} />
                   </div>
                 </td>
@@ -123,12 +123,12 @@ export default async function AdminCompetitorsPage() {
                   className="px-4 py-10 text-center text-muted-foreground"
                 >
                   No competitors yet.{" "}
-                  <InstantLink
+                  <Link
                     href="/admin/competitors/new"
                     className="text-brass underline"
                   >
                     Add the first one
-                  </InstantLink>
+                  </Link>
                 </td>
               </tr>
             )}

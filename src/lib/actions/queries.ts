@@ -22,6 +22,14 @@ function notConfigured(): ActionResult<never> {
   };
 }
 
+/** Exclude profile_photo_bytes — photos are served only via /api/media/[id]. */
+const COMPETITOR_COLUMNS = `
+  id, competition_id, full_name, barber_name, profile_photo_url,
+  profile_photo_mime, short_bio, description, phone, competition_number,
+  status, instagram_url, tiktok_url, facebook_url, youtube_url, telegram_url,
+  website_url, created_at, updated_at
+`;
+
 async function attachImages(
   competitors: CompetitorWithImages[]
 ): Promise<CompetitorWithImages[]> {
@@ -105,13 +113,13 @@ export async function getCompetitors(
 
   const result = options?.includeDrafts
     ? await query<CompetitorWithImages>(
-        `select * from competitors
+        `select ${COMPETITOR_COLUMNS} from competitors
          where competition_id = $1
          order by competition_number asc`,
         [competitionId]
       )
     : await query<CompetitorWithImages>(
-        `select * from competitors
+        `select ${COMPETITOR_COLUMNS} from competitors
          where competition_id = $1 and status = 'published'
          order by competition_number asc`,
         [competitionId]
@@ -126,7 +134,7 @@ export async function getCompetitorById(
   if (!isDatabaseConfigured()) return null;
 
   const competitor = await queryOne<CompetitorWithImages>(
-    `select * from competitors where id = $1`,
+    `select ${COMPETITOR_COLUMNS} from competitors where id = $1`,
     [id]
   );
   if (!competitor) return null;

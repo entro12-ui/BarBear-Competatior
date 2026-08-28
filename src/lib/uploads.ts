@@ -14,7 +14,7 @@ function isAllowedImage(mime: string, fileName?: string): boolean {
   );
 }
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const MAX_FILE_SIZE = 1024 * 1024;
 
 let columnsReady = false;
 
@@ -86,7 +86,7 @@ export async function saveCompetitorProfilePhoto(
     throw new Error("Please upload an image file (JPG, PNG, WEBP, GIF, HEIC, etc.).");
   }
   if (file.size > MAX_FILE_SIZE) {
-    throw new Error("Image must be 5MB or smaller. Try a smaller photo.");
+    throw new Error("Image must be 1MB or smaller. Try a smaller photo.");
   }
 
   await ensurePhotoColumns();

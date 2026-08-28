@@ -2,11 +2,11 @@ services:
   - type: web
     name: barbear
     runtime: node
-    plan: starter
+    plan: standard
     region: oregon
     buildCommand: npm install && npm run build
     startCommand: npm run start
-    healthCheckPath: /
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
         value: "20.18.0"

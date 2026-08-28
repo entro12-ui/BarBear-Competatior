@@ -1,4 +1,4 @@
-import { InstantLink } from "@/components/layout/instant-link";
+import Link from "next/link";
 import { AdminShell } from "@/components/admin/admin-shell";
 import {
   getAdminDashboardStats,
@@ -26,12 +26,12 @@ export default async function AdminDashboardPage() {
       {!primary ? (
         <div className="border border-dashed border-border p-8">
           <p className="font-display text-2xl">No competitions yet</p>
-          <InstantLink
+          <Link
             href="/admin/competitions/new"
             className="mt-4 inline-block text-brass"
           >
             Create your first competition
-          </InstantLink>
+          </Link>
         </div>
       ) : (
         <>
@@ -78,30 +78,30 @@ export default async function AdminDashboardPage() {
           </div>
 
           <div className="mt-8 flex flex-wrap gap-3">
-            <InstantLink
+            <Link
               href="/admin/competitors"
               className="bg-ink px-4 py-2 text-sm text-stone"
             >
               Manage competitors
-            </InstantLink>
-            <InstantLink
+            </Link>
+            <Link
               href="/admin/competitors/new"
               className="border border-border px-4 py-2 text-sm"
             >
               Add competitor
-            </InstantLink>
-            <InstantLink
+            </Link>
+            <Link
               href="/admin/votes"
               className="border border-border px-4 py-2 text-sm"
             >
               View votes
-            </InstantLink>
-            <InstantLink
+            </Link>
+            <Link
               href="/admin/results"
               className="border border-border px-4 py-2 text-sm"
             >
               View results
-            </InstantLink>
+            </Link>
           </div>
         </>
       )}

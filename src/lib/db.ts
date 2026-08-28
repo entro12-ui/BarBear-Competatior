@@ -30,6 +30,9 @@ export function getPool(): Pool {
       ssl: needsSsl(connectionString)
         ? { rejectUnauthorized: false }
         : undefined,
+      max: 5,
+      connectionTimeoutMillis: 8000,
+      idleTimeoutMillis: 30000,
     });
   }
   return global.__barbearPool;
