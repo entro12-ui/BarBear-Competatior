@@ -83,6 +83,9 @@ export const voteRequestSchema = z.object({
       (value) => isValidPhone(value),
       "Enter a valid phone, e.g. 0918…, 0718…, +2519…, +2517…, or +1…"
     ),
+  device_id: z
+    .string()
+    .uuid("Could not verify this device. Refresh the page and try again."),
 });
 
 export const loginSchema = z.object({

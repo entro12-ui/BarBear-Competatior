@@ -49,7 +49,7 @@ export default async function CompetitorsPage() {
       <main className="mx-auto max-w-lg px-4 pb-24 pt-24">
         <div className="mb-6 rounded-xl bg-[#7a1f2b] px-4 py-3 text-center text-sm leading-snug text-white/95">
           {votingOpen
-            ? "One vote per phone number. Voting closes Sunday, Aug 30 at 6:00 PM. Final by judges at Vamdas Cinema, Megenagna."
+            ? "One vote per phone number and per device. Voting closes Sunday, Aug 30 at 6:00 PM. Final by judges at Vamdas Cinema, Megenagna."
             : "Voting is closed. The final will be held by judges at Vamdas Cinema, Megenagna."}
         </div>
 

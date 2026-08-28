@@ -57,7 +57,7 @@ async function main() {
      )
      on conflict (slug) do nothing`,
     [
-      "Each person can vote only once.\nOne vote is allowed per number.\nYou must select only one competitor.\nMultiple votes using the same number are not allowed.\nAdmin can close voting when the competition ends.",
+      "Each person can vote only once.\nOne vote is allowed per phone number.\nOne vote is allowed per device.\nYou must select only one competitor.\nMultiple votes using the same phone or device are not allowed.\nAdmin can close voting when the competition ends.",
     ]
   );
 

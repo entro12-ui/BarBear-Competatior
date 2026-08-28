@@ -74,6 +74,7 @@ export interface Vote {
   voter_name: string;
   voter_email: string;
   voter_phone: string;
+  device_id: string | null;
   email_verified: boolean;
   created_at: string;
   updated_at: string;

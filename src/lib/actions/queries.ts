@@ -180,6 +180,20 @@ export async function checkPhoneVoteStatus(
   return { hasVoted: Boolean(row) };
 }
 
+export async function checkDeviceVoteStatus(
+  competitionId: string,
+  deviceId: string
+): Promise<{ hasVoted: boolean }> {
+  if (!isDatabaseConfigured()) return { hasVoted: false };
+  const row = await queryOne<{ id: string }>(
+    `select id from votes
+     where competition_id = $1 and device_id = $2
+     limit 1`,
+    [competitionId, deviceId]
+  );
+  return { hasVoted: Boolean(row) };
+}
+
 export async function getCompetitionResults(
   competitionId: string,
   options?: { requirePublic?: boolean }

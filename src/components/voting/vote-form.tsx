@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useEffect, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -10,6 +10,7 @@ import {
   voteRequestSchema,
   type VoteRequestValues,
 } from "@/lib/validations";
+import { getOrCreateDeviceId } from "@/lib/utils/device-id";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,8 +40,13 @@ export function VoteForm({
       competitor_id: competitor.id,
       voter_name: "",
       voter_phone: "",
+      device_id: "",
     },
   });
+
+  useEffect(() => {
+    form.setValue("device_id", getOrCreateDeviceId(), { shouldValidate: true });
+  }, [form]);
 
   if (!votingOpen) {
     return (
@@ -123,9 +129,11 @@ export function VoteForm({
           )}
           <p className="text-xs text-white/45">
             Accepts 09…, 07…, +251…, and international numbers. One vote per
-            phone.
+            phone number and per device.
           </p>
         </div>
+
+        <input type="hidden" {...form.register("device_id")} />
 
         <Button
           type="submit"

@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   clearAdminSession,
@@ -11,7 +12,11 @@ import { isDatabaseConfigured, queryOne } from "@/lib/db";
 import { isVotingOpen, normalizePhone } from "@/lib/utils/format";
 import { voteRequestSchema } from "@/lib/validations";
 import type { ActionResult } from "@/lib/actions/queries";
-import { checkPhoneVoteStatus } from "@/lib/actions/queries";
+import {
+  checkDeviceVoteStatus,
+  checkPhoneVoteStatus,
+} from "@/lib/actions/queries";
+import { DEVICE_ID_COOKIE, ensureVoteDeviceColumn } from "@/lib/vote-device";
 import type { Competition, Vote } from "@/types/database";
 
 export async function submitVote(
@@ -33,6 +38,17 @@ export async function submitVote(
     parsed.data;
   const phone = normalizePhone(voter_phone);
 
+  const cookieStore = await cookies();
+  const cookieDeviceId = cookieStore.get(DEVICE_ID_COOKIE)?.value;
+  const deviceId = parsed.data.device_id || cookieDeviceId;
+
+  if (!deviceId) {
+    return {
+      success: false,
+      error: "Could not verify this device. Refresh the page and try again.",
+    };
+  }
+
   if (!phone) {
     return {
       success: false,
@@ -42,6 +58,8 @@ export async function submitVote(
   }
 
   try {
+    await ensureVoteDeviceColumn();
+
     const competition = await queryOne<Competition>(
       `select * from competitions where id = $1`,
       [competition_id]
@@ -69,12 +87,21 @@ export async function submitVote(
       return { success: false, error: "Selected competitor is not available." };
     }
 
-    const { hasVoted } = await checkPhoneVoteStatus(competition_id, phone);
-    if (hasVoted) {
+    const phoneStatus = await checkPhoneVoteStatus(competition_id, phone);
+    if (phoneStatus.hasVoted) {
       return {
         success: false,
         error:
-          "This phone number has already been used to vote in this competition. Each person is allowed to vote only once.",
+          "This phone number has already been used to vote in this competition. Each phone number is allowed to vote only once.",
+      };
+    }
+
+    const deviceStatus = await checkDeviceVoteStatus(competition_id, deviceId);
+    if (deviceStatus.hasVoted) {
+      return {
+        success: false,
+        error:
+          "This device has already been used to vote in this competition. Each device is allowed to vote only once.",
       };
     }
 
@@ -85,8 +112,8 @@ export async function submitVote(
     try {
       vote = await queryOne<Vote>(
         `insert into votes (
-           competition_id, competitor_id, voter_name, voter_email, voter_phone, email_verified
-         ) values ($1, $2, $3, $4, $5, true)
+           competition_id, competitor_id, voter_name, voter_email, voter_phone, device_id, email_verified
+         ) values ($1, $2, $3, $4, $5, $6, true)
          returning *`,
         [
           competition_id,
@@ -94,6 +121,7 @@ export async function submitVote(
           voter_name.trim(),
           placeholderEmail,
           phone,
+          deviceId,
         ]
       );
     } catch (error) {
@@ -102,7 +130,14 @@ export async function submitVote(
         return {
           success: false,
           error:
-            "This phone number has already been used to vote in this competition. Each person is allowed to vote only once.",
+            "This phone number has already been used to vote in this competition. Each phone number is allowed to vote only once.",
+        };
+      }
+      if (message.includes("idx_votes_competition_device")) {
+        return {
+          success: false,
+          error:
+            "This device has already been used to vote in this competition. Each device is allowed to vote only once.",
         };
       }
       throw error;

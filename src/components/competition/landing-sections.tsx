@@ -171,7 +171,7 @@ export function FinalsSection() {
 export function VotingRules({ rules }: { rules: string }) {
   const defaults = [
     "Each person can vote only once.",
-    "One vote is allowed per phone number.",
+    "One vote is allowed per phone number and per device.",
     "You must select only one competitor.",
     "Public voting closes Sunday, August 30, 2026 at 6:00 PM (Addis Ababa).",
     "After voting ends, no more votes are accepted.",

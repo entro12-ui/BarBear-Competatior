@@ -79,7 +79,7 @@ export default async function VoteSuccessPage({ searchParams }: Props) {
           )}
 
           <p className="mt-5 text-sm text-emerald-900/65">
-            Each number can vote only once in this competition.
+            Each phone number and device can vote only once in this competition.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">

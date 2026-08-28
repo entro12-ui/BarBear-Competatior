@@ -179,7 +179,7 @@ export default async function CompetitorDetailPage({ params }: Props) {
             )}
           </div>
           <p className="text-center text-[11px] text-white/45">
-            One vote per number
+            One vote per phone and device
           </p>
         </div>
       </div>

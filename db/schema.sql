@@ -97,12 +97,17 @@ create table if not exists public.votes (
   voter_name text not null,
   voter_email text not null,
   voter_phone text not null,
+  device_id text,
   email_verified boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (competition_id, voter_email),
   unique (competition_id, voter_phone)
 );
+
+create unique index if not exists idx_votes_competition_device
+  on public.votes (competition_id, device_id)
+  where device_id is not null;
 
 create table if not exists public.vote_challenges (
   id uuid primary key default gen_random_uuid(),

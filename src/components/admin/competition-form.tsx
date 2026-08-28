@@ -47,7 +47,7 @@ export function CompetitionForm({ competition }: Props) {
       description: competition?.description ?? "",
       rules:
         competition?.rules ??
-        "Each person can vote only once.\nOne vote is allowed per email address.\nOne vote is allowed per phone number.\nYou must select only one competitor.\nMultiple votes using the same email or phone are not allowed.\nAdmin can close voting when the competition ends.",
+        "Each person can vote only once.\nOne vote is allowed per email address.\nOne vote is allowed per phone number.\nOne vote is allowed per device.\nYou must select only one competitor.\nMultiple votes using the same email, phone, or device are not allowed.\nAdmin can close voting when the competition ends.",
       location: competition?.location ?? "",
       start_date: competition?.start_date?.slice(0, 16) ?? "",
       end_date: competition?.end_date?.slice(0, 16) ?? "",
