@@ -5,6 +5,7 @@ import {
   getAdminVotes,
   getCompetitions,
   getCompetitors,
+  getPrimaryCompetition,
 } from "@/lib/actions/queries";
 
 type Props = {
@@ -18,7 +19,7 @@ type Props = {
 export default async function AdminVotesPage({ searchParams }: Props) {
   const params = await searchParams;
   const competitions = await getCompetitions();
-  const primary = competitions[0];
+  const primary = await getPrimaryCompetition();
   const page = Number(params.page ?? "1") || 1;
   const pageSize = 20;
 

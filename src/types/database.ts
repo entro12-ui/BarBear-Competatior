@@ -108,6 +108,7 @@ export interface CompetitionResult {
   profile_photo_url: string | null;
   total_votes: number;
   vote_percentage: number;
+  status?: CompetitorStatus;
 }
 
 export interface DashboardStats {

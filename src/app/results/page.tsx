@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SiteFooter, SiteHeader } from "@/components/layout/site-chrome";
 import {
   getCompetitionResults,
+  getCompetitionVoteTotal,
   getFeaturedCompetition,
 } from "@/lib/actions/queries";
 import { formatCompetitionNumber } from "@/lib/utils/format";
@@ -12,10 +13,14 @@ export const metadata = {
 
 export default async function PublicResultsPage() {
   const competition = await getFeaturedCompetition();
-  const results =
-    competition && competition.public_results
-      ? await getCompetitionResults(competition.id, { requirePublic: true })
-      : [];
+  const [results, totalVotes] = competition
+    ? await Promise.all([
+        competition.public_results
+          ? getCompetitionResults(competition.id, { requirePublic: true })
+          : Promise.resolve([]),
+        getCompetitionVoteTotal(competition.id),
+      ])
+    : [[], 0];
 
   return (
     <>
@@ -26,6 +31,15 @@ export default async function PublicResultsPage() {
             Leaderboard
           </p>
           <h1 className="mt-3 font-display text-5xl">Results</h1>
+
+          {competition && (
+            <div className="mt-4 text-muted-foreground">
+              <p className="font-medium text-foreground">{competition.name}</p>
+              <p className="mt-1 font-display text-2xl text-brass">
+                {totalVotes.toLocaleString()} total votes
+              </p>
+            </div>
+          )}
 
           {!competition?.public_results ? (
             <p className="mt-8 text-muted-foreground">
@@ -51,7 +65,9 @@ export default async function PublicResultsPage() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-display text-2xl">{row.total_votes}</p>
+                    <p className="font-display text-2xl tabular-nums">
+                      {row.total_votes.toLocaleString()}
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       {row.vote_percentage}%
                     </p>

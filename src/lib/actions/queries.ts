@@ -79,6 +79,27 @@ export async function getFeaturedCompetition(): Promise<Competition | null> {
   );
 }
 
+/** Active/featured competition for admin views (not just newest created). */
+export async function getPrimaryCompetition(): Promise<Competition | null> {
+  if (!isDatabaseConfigured()) return null;
+  const featured = await getFeaturedCompetition();
+  if (featured) return featured;
+  return queryOne<Competition>(
+    `select * from competitions order by created_at desc limit 1`
+  );
+}
+
+export async function getCompetitionVoteTotal(
+  competitionId: string
+): Promise<number> {
+  if (!isDatabaseConfigured()) return 0;
+  const row = await queryOne<{ count: string }>(
+    `select count(*)::text as count from votes where competition_id = $1`,
+    [competitionId]
+  );
+  return Number(row?.count ?? 0);
+}
+
 export async function getCompetitionById(
   id: string
 ): Promise<Competition | null> {
@@ -204,7 +225,7 @@ export async function checkDeviceVoteStatus(
 
 export async function getCompetitionResults(
   competitionId: string,
-  options?: { requirePublic?: boolean }
+  options?: { requirePublic?: boolean; includeAllStatuses?: boolean }
 ): Promise<CompetitionResult[]> {
   if (!isDatabaseConfigured()) return [];
 
@@ -213,49 +234,71 @@ export async function getCompetitionResults(
     if (!competition?.public_results) return [];
   }
 
-  const competitors = await query<{
+  const includeAll = options?.includeAllStatuses ?? false;
+
+  const rows = await query<{
     id: string;
     competition_id: string;
     full_name: string;
     barber_name: string;
     competition_number: string;
     profile_photo_url: string | null;
+    status: string;
+    total_votes: string;
   }>(
-    `select id, competition_id, full_name, barber_name, competition_number, profile_photo_url
-     from competitors
-     where competition_id = $1 and status = 'published'
-     order by competition_number asc`,
+    includeAll
+      ? `select
+           c.id,
+           c.competition_id,
+           c.full_name,
+           c.barber_name,
+           c.competition_number,
+           c.profile_photo_url,
+           c.status,
+           count(v.id)::text as total_votes
+         from competitors c
+         left join votes v on v.competitor_id = c.id
+         where c.competition_id = $1
+           and (
+             c.status = 'published'
+             or exists (select 1 from votes vx where vx.competitor_id = c.id)
+           )
+         group by c.id
+         order by count(v.id) desc, c.competition_number asc`
+      : `select
+           c.id,
+           c.competition_id,
+           c.full_name,
+           c.barber_name,
+           c.competition_number,
+           c.profile_photo_url,
+           c.status,
+           count(v.id)::text as total_votes
+         from competitors c
+         left join votes v on v.competitor_id = c.id
+         where c.competition_id = $1 and c.status = 'published'
+         group by c.id
+         order by count(v.id) desc, c.competition_number asc`,
     [competitionId]
   );
 
-  const votes = await query<{ competitor_id: string }>(
-    `select competitor_id from votes where competition_id = $1`,
-    [competitionId]
-  );
+  const total = await getCompetitionVoteTotal(competitionId);
 
-  const counts = new Map<string, number>();
-  for (const vote of votes.rows) {
-    counts.set(vote.competitor_id, (counts.get(vote.competitor_id) ?? 0) + 1);
-  }
-
-  const total = votes.rows.length;
-
-  return competitors.rows
-    .map((c) => {
-      const totalVotes = counts.get(c.id) ?? 0;
-      return {
-        competition_id: c.competition_id,
-        competitor_id: c.id,
-        full_name: c.full_name,
-        barber_name: c.barber_name,
-        competition_number: c.competition_number,
-        profile_photo_url: c.profile_photo_url,
-        total_votes: totalVotes,
-        vote_percentage:
-          total === 0 ? 0 : Math.round((totalVotes / total) * 10000) / 100,
-      };
-    })
-    .sort((a, b) => b.total_votes - a.total_votes);
+  return rows.rows.map((c) => {
+    const totalVotes = Number(c.total_votes ?? 0);
+    return {
+      competition_id: c.competition_id,
+      competitor_id: c.id,
+      full_name: c.full_name,
+      barber_name: c.barber_name,
+      competition_number: c.competition_number,
+      profile_photo_url: c.profile_photo_url,
+      total_votes: totalVotes,
+      vote_percentage:
+        total === 0 ? 0 : Math.round((totalVotes / total) * 10000) / 100,
+      status: c.status as CompetitionResult["status"],
+    };
+  });
 }
 
 export async function getAdminDashboardStats(
