@@ -410,7 +410,7 @@ export async function getAdminVotes(params: {
      left join competitors c on c.id = v.competitor_id
      left join competitions comp on comp.id = v.competition_id
      ${where}
-     order by v.created_at desc
+     order by v.created_at desc, v.id desc
      limit $${values.length - 1} offset $${values.length}`,
     values
   );

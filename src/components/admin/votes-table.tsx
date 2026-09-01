@@ -109,19 +109,27 @@ export function VotesTable({
       </div>
 
       <div className="overflow-x-auto border border-border bg-card">
+        <div className="border-b border-border bg-muted/50 px-4 py-3">
+          <p className="text-xs text-muted-foreground">
+            Sorted by vote date — newest first
+          </p>
+        </div>
         <table className="w-full text-left text-sm">
           <thead className="border-b border-border bg-muted/50">
             <tr>
+              <th className="px-4 py-3">Vote Date</th>
               <th className="px-4 py-3">Voter Name</th>
               <th className="px-4 py-3">Number</th>
               <th className="px-4 py-3">Selected Competitor</th>
               <th className="px-4 py-3">Competition</th>
-              <th className="px-4 py-3">Vote Date</th>
             </tr>
           </thead>
           <tbody>
             {votes.map((vote) => (
               <tr key={vote.id} className="border-b border-border/70">
+                <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
+                  {formatDateTime(vote.created_at)}
+                </td>
                 <td className="px-4 py-3">{vote.voter_name}</td>
                 <td className="px-4 py-3">{vote.voter_phone}</td>
                 <td className="px-4 py-3">
@@ -132,7 +140,6 @@ export function VotesTable({
                 <td className="px-4 py-3">
                   {vote.competition?.name ?? "—"}
                 </td>
-                <td className="px-4 py-3">{formatDateTime(vote.created_at)}</td>
               </tr>
             ))}
             {votes.length === 0 && (
